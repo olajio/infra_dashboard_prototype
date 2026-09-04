@@ -1,0 +1,9 @@
+1. Server Down: Currently looking at now-5m, We suggest looking at now - 15m. This would ensure that scenarios of temporary outage like server restart is not counted at Server Down
+
+2. We found that Fleet means all the servers being monitored: We can change this to Server availability
+
+3. Filters for P1, P2 and P3 are correctly applied. But we found that the filter is like: priority_name : "2 - High" for P2 as an example. We need to dig deeper to determine if these filters are related to Server incidents only or it includes application incidents as well - Reviewed the incidents in Discover and couldn't relate it to specific host.name: https://kibana-prod.gcp.cna.com/app/r/s/xDk6W I need clarification on what incidents are being reported here and if there's a way to indicate filter for incidents where host.name exist, then we can be sure that this panel represent actual server/infrastructure incident. Otherwise, this should be renamed and moved to where it's applicable. 
+
+4. Oracle Servers: Under the Oracle servers tab. The Detailed Dashboards with Dashboard 1, Dashboard 2 and Dashboard 3 are all the same. Pointing to: Prototype Infrastructure Dashboard KPIs https://kibana-prod.gcp.cna.com/app/r/s/tf0R3. Can you advise if this is intended or if it's meant to be different Dashboards. If they're supposed to be different Dashboards, can you link the correct dashboards and rename these to indicate the function of the Dashboards rather than  Dashboard 1/2/3.
+
+5. MySQL Servers: Same as point number 4 above. Under the MySQL Servers, the Detailed Dashboards 1/2/3 point to the same Prototype Infrastructure Dashboard KPIs https://kibana-prod.gcp.cna.com/app/r/s/tf0R3
