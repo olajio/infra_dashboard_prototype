@@ -1,0 +1,762 @@
+<title>Infra Dashboard Review</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --bg:#f4f6f9; --surface:#ffffff; --surface-2:#eef2f7; --surface-3:#e6ecf3;
+    --border:#d9e0e9; --border-strong:#c3cdd9;
+    --ink:#16202f; --ink-2:#4a586a; --muted:#7d8b9c;
+    --accent:#0a7482; --accent-2:#0e93a5; --accent-soft:#dbeff2;
+    --good:#0f8a5f; --good-soft:#dcf3e8;
+    --warn:#b6810a; --warn-soft:#fbefd0;
+    --crit:#cc3a34; --crit-soft:#fadedc;
+    --p1:#cc3a34; --p2:#d8820c; --p3:#3a7bd6;
+    --shadow:0 1px 2px rgba(18,32,50,.06), 0 3px 10px rgba(18,32,50,.05);
+    --shadow-lift:0 4px 22px rgba(18,32,50,.10);
+    --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+    --sans:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    --maxread:74ch;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#0c141e; --surface:#131f2c; --surface-2:#1a2836; --surface-3:#213141;
+      --border:#263647; --border-strong:#33475b;
+      --ink:#e8eef6; --ink-2:#a3b3c6; --muted:#6d8098;
+      --accent:#2bb6c7; --accent-2:#57d3e2; --accent-soft:#123039;
+      --good:#24c292; --good-soft:#123528;
+      --warn:#fcd883; --warn-soft:#3a2f12;
+      --crit:#f6726a; --crit-soft:#3a1d1c;
+      --p1:#f6726a; --p2:#f5b657; --p3:#6fa8ff;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.35);
+      --shadow-lift:0 6px 26px rgba(0,0,0,.5);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0c141e; --surface:#131f2c; --surface-2:#1a2836; --surface-3:#213141;
+    --border:#263647; --border-strong:#33475b;
+    --ink:#e8eef6; --ink-2:#a3b3c6; --muted:#6d8098;
+    --accent:#2bb6c7; --accent-2:#57d3e2; --accent-soft:#123039;
+    --good:#24c292; --good-soft:#123528;
+    --warn:#fcd883; --warn-soft:#3a2f12;
+    --crit:#f6726a; --crit-soft:#3a1d1c;
+    --p1:#f6726a; --p2:#f5b657; --p3:#6fa8ff;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.35);
+    --shadow-lift:0 6px 26px rgba(0,0,0,.5);
+  }
+
+  *{box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.6;
+    font-size:16px;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 24px;}
+
+  /* ---------- top bar ---------- */
+  .topbar{position:sticky;top:0;z-index:40;background:color-mix(in srgb,var(--surface) 88%,transparent);
+    backdrop-filter:blur(10px);border-bottom:1px solid var(--border);}
+  .topbar .wrap{display:flex;align-items:center;gap:18px;height:56px;}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:600;letter-spacing:.01em;white-space:nowrap;}
+  .brand .dot{width:11px;height:11px;border-radius:3px;background:var(--accent);
+    box-shadow:0 0 0 4px var(--accent-soft);}
+  .navlinks{display:flex;gap:2px;margin-left:auto;flex-wrap:wrap;}
+  .navlinks a{font-size:13px;color:var(--ink-2);text-decoration:none;padding:6px 11px;border-radius:7px;
+    font-weight:500;white-space:nowrap;}
+  .navlinks a:hover{background:var(--surface-2);color:var(--ink);}
+  .theme-btn{border:1px solid var(--border);background:var(--surface);color:var(--ink-2);
+    border-radius:8px;width:34px;height:34px;cursor:pointer;font-size:15px;display:grid;place-items:center;}
+  .theme-btn:hover{color:var(--ink);border-color:var(--border-strong);}
+
+  /* ---------- hero ---------- */
+  header.hero{padding:56px 0 40px;border-bottom:1px solid var(--border);
+    background:radial-gradient(120% 130% at 88% -10%,var(--accent-soft) 0%,transparent 55%);}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--accent);font-weight:600;margin:0 0 14px;}
+  h1{font-size:clamp(30px,4.4vw,46px);line-height:1.08;margin:0 0 16px;font-weight:700;
+    letter-spacing:-.02em;text-wrap:balance;max-width:16ch;}
+  .lede{font-size:19px;color:var(--ink-2);max-width:60ch;margin:0;}
+  .meta-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px;}
+  .meta{font-family:var(--mono);font-size:12.5px;color:var(--ink-2);background:var(--surface);
+    border:1px solid var(--border);border-radius:999px;padding:6px 13px;}
+  .meta b{color:var(--ink);font-weight:600;}
+
+  section{padding:52px 0;border-bottom:1px solid var(--border);}
+  section:last-of-type{border-bottom:none;}
+  .kicker{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--muted);font-weight:600;margin:0 0 8px;}
+  h2{font-size:clamp(23px,3vw,30px);margin:0 0 10px;font-weight:700;letter-spacing:-.015em;text-wrap:balance;}
+  h2 + .section-lede{font-size:17px;color:var(--ink-2);max-width:var(--maxread);margin:0 0 30px;}
+  h3{font-size:19px;margin:34px 0 12px;font-weight:600;letter-spacing:-.01em;}
+  p{max-width:var(--maxread);}
+  a{color:var(--accent-2);}
+
+  /* ---------- verdict cards (notes) ---------- */
+  .verdicts{display:grid;gap:16px;}
+  .vcard{background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    box-shadow:var(--shadow);overflow:hidden;}
+  .vhead{display:flex;align-items:flex-start;gap:14px;padding:18px 20px;cursor:pointer;
+    list-style:none;}
+  .vhead::-webkit-details-marker{display:none}
+  .vnum{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--accent);
+    background:var(--accent-soft);border-radius:7px;padding:3px 8px;flex:none;margin-top:2px;}
+  .vtitle{font-weight:600;flex:1;letter-spacing:-.01em;}
+  .vtitle .sub{display:block;font-weight:400;color:var(--ink-2);font-size:14px;margin-top:3px;}
+  .badge{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;
+    padding:4px 10px;border-radius:999px;flex:none;margin-top:1px;white-space:nowrap;}
+  .b-agree{color:var(--good);background:var(--good-soft);}
+  .b-partly{color:var(--warn);background:var(--warn-soft);}
+  .b-clarify{color:var(--p3);background:color-mix(in srgb,var(--p3) 15%,transparent);}
+  .chev{margin-left:2px;color:var(--muted);transition:transform .2s;flex:none;margin-top:3px;}
+  details[open] .chev{transform:rotate(90deg);}
+  .vbody{padding:2px 20px 20px 20px;border-top:1px solid var(--border);}
+  .vbody p{margin:14px 0 0;color:var(--ink-2);font-size:15px;max-width:none;}
+  .vbody p:first-child{margin-top:16px;}
+  .vbody strong{color:var(--ink);}
+
+  /* ---------- fix / enh tables ---------- */
+  .table-scroll{overflow-x:auto;border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);}
+  table.grid{border-collapse:collapse;width:100%;font-size:14.5px;min-width:640px;background:var(--surface);}
+  table.grid th{text-align:left;font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--muted);font-weight:600;padding:13px 16px;border-bottom:1px solid var(--border-strong);
+    background:var(--surface-2);}
+  table.grid td{padding:14px 16px;border-bottom:1px solid var(--border);vertical-align:top;color:var(--ink-2);}
+  table.grid tr:last-child td{border-bottom:none;}
+  table.grid td:first-child{color:var(--ink);font-weight:600;white-space:nowrap;font-family:var(--mono);font-size:13px;}
+  table.grid td b{color:var(--ink);font-weight:600;}
+  .tag{display:inline-block;font-family:var(--mono);font-size:10.5px;font-weight:600;letter-spacing:.03em;
+    padding:2px 7px;border-radius:5px;text-transform:uppercase;}
+  .t-crit{color:var(--crit);background:var(--crit-soft);}
+  .t-med{color:var(--warn);background:var(--warn-soft);}
+  .t-low{color:var(--ink-2);background:var(--surface-3);}
+  .t-new{color:var(--accent);background:var(--accent-soft);}
+  code,.code{font-family:var(--mono);font-size:.9em;background:var(--surface-2);padding:1.5px 6px;
+    border-radius:5px;color:var(--ink);border:1px solid var(--border);}
+
+  /* ---------- MOCKUP ---------- */
+  .mock-note{font-family:var(--mono);font-size:12px;color:var(--muted);margin:0 0 18px;
+    display:flex;align-items:center;gap:8px;}
+  .mock-note .swatch{width:9px;height:9px;border-radius:50%;background:var(--accent);flex:none;}
+  .console{background:var(--surface-2);border:1px solid var(--border-strong);border-radius:16px;padding:16px;
+    box-shadow:var(--shadow-lift);}
+  @media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .console{background:#0a1017;}}
+  :root[data-theme="dark"] .console{background:#0a1017;}
+  .console-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:4px 4px 14px;}
+  .console-title{font-weight:600;font-size:15px;display:flex;align-items:center;gap:9px;}
+  .console-title .live{font-family:var(--mono);font-size:10.5px;font-weight:600;color:var(--good);
+    background:var(--good-soft);padding:3px 8px;border-radius:999px;display:inline-flex;align-items:center;gap:5px;}
+  .console-title .live::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--good);}
+  .console-right{margin-left:auto;display:flex;gap:8px;align-items:center;font-family:var(--mono);
+    font-size:11.5px;color:var(--muted);flex-wrap:wrap;}
+  .pill{font-family:var(--mono);font-size:11.5px;padding:5px 11px;border-radius:8px;border:1px solid var(--border-strong);
+    background:var(--surface);color:var(--ink-2);display:inline-flex;align-items:center;gap:6px;white-space:nowrap;}
+  .pill b{color:var(--ink);font-weight:600;}
+  .pill.time{color:var(--ink);border-color:var(--accent);background:var(--accent-soft);}
+
+  .controls{display:flex;gap:8px;flex-wrap:wrap;padding:0 4px 14px;}
+  .ctrl{font-family:var(--mono);font-size:11.5px;background:var(--surface);border:1px solid var(--border);
+    border-radius:8px;padding:7px 11px;color:var(--ink-2);display:flex;flex-direction:column;gap:2px;min-width:120px;}
+  .ctrl span{font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
+  .ctrl b{color:var(--ink);font-weight:500;font-size:12.5px;}
+  .ctrl.enh{border-color:var(--accent);border-style:dashed;}
+
+  .mgrid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px;}
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:15px 16px;
+    display:flex;flex-direction:column;min-width:0;}
+  .panel-h{font-size:12.5px;font-weight:600;color:var(--ink-2);margin:0 0 12px;display:flex;align-items:center;
+    justify-content:space-between;gap:8px;}
+  .panel-h .newtag{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:.06em;color:var(--accent);
+    background:var(--accent-soft);padding:2px 6px;border-radius:5px;text-transform:uppercase;}
+  .sec-label{grid-column:1/-1;font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--muted);font-weight:600;margin:8px 4px 0;display:flex;align-items:center;gap:10px;}
+  .sec-label::after{content:"";flex:1;height:1px;background:var(--border);}
+
+  .kpi .big{font-family:var(--mono);font-size:38px;font-weight:600;line-height:1;letter-spacing:-.02em;}
+  .kpi .unit{font-size:15px;color:var(--muted);font-weight:500;}
+  .kpi .foot{font-size:11.5px;color:var(--muted);margin-top:9px;font-family:var(--mono);}
+  .kpi.good .big{color:var(--good);} .kpi.warn .big{color:var(--warn);} .kpi.crit .big{color:var(--crit);}
+  .delta{font-family:var(--mono);font-size:11.5px;font-weight:600;padding:2px 7px;border-radius:6px;}
+  .delta.up{color:var(--good);background:var(--good-soft);}
+  .delta.down{color:var(--crit);background:var(--crit-soft);}
+
+  .spark{width:100%;height:34px;margin-top:auto;display:block;}
+
+  table.dt{width:100%;border-collapse:collapse;font-size:12.5px;font-family:var(--mono);}
+  table.dt th{text-align:left;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);
+    font-weight:600;padding:0 0 8px;}
+  table.dt td{padding:5px 0;border-top:1px solid var(--border);color:var(--ink-2);}
+  table.dt td.host{color:var(--ink);}
+  table.dt td.num{text-align:right;}
+  .heat{display:inline-block;min-width:56px;text-align:right;padding:2px 8px;border-radius:6px;font-weight:600;
+    font-variant-numeric:tabular-nums;}
+  .h-g{background:var(--good-soft);color:var(--good);}
+  .h-y{background:var(--warn-soft);color:var(--warn);}
+  .h-r{background:var(--crit-soft);color:var(--crit);}
+  .sev{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:7px;vertical-align:middle;}
+  .prio{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-top:1px solid var(--border);}
+  .prio:first-of-type{border-top:none;}
+  .prio .lab{display:flex;align-items:center;gap:9px;font-size:13px;}
+  .prio .cnt{font-family:var(--mono);font-size:22px;font-weight:600;}
+  .stkbar{display:flex;height:8px;border-radius:5px;overflow:hidden;margin-top:12px;background:var(--surface-2);}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:12px;font-family:var(--mono);}
+  .legend i{width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:5px;vertical-align:-1px;}
+
+  /* ---------- steps ---------- */
+  .steps{counter-reset:step;display:grid;gap:14px;}
+  .step{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:18px 20px 18px 58px;
+    position:relative;box-shadow:var(--shadow);}
+  .step::before{counter-increment:step;content:counter(step);position:absolute;left:16px;top:18px;
+    width:28px;height:28px;border-radius:8px;background:var(--accent);color:#fff;font-family:var(--mono);
+    font-weight:600;font-size:13px;display:grid;place-items:center;}
+  :root[data-theme="dark"] .step::before{color:#06121a;}
+  @media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .step::before{color:#06121a;}}
+  .step h4{margin:0 0 4px;font-size:16px;font-weight:600;letter-spacing:-.01em;}
+  .step .where{font-family:var(--mono);font-size:11.5px;color:var(--accent);font-weight:500;
+    text-transform:uppercase;letter-spacing:.05em;}
+  .step p{margin:9px 0 0;font-size:14.5px;color:var(--ink-2);max-width:none;}
+  pre{background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:13px 15px;
+    overflow-x:auto;margin:12px 0 0;font-family:var(--mono);font-size:12.5px;line-height:1.55;color:var(--ink);}
+  pre .cm{color:var(--muted);} pre .kw{color:var(--accent-2);font-weight:600;} pre .st{color:var(--good);}
+  .phase{font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);
+    font-weight:600;margin:36px 0 14px;padding-top:8px;display:flex;align-items:center;gap:10px;}
+  .phase span{background:var(--accent-soft);border-radius:6px;padding:3px 9px;}
+
+  .callout{background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 30%,transparent);
+    border-radius:12px;padding:16px 18px;margin:24px 0 0;font-size:14.5px;color:var(--ink);max-width:none;}
+  .callout b{font-weight:600;}
+  footer{padding:36px 0 60px;color:var(--muted);font-size:13px;font-family:var(--mono);}
+  footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+
+  @media (max-width:760px){
+    .mgrid{gap:10px;}
+    .col-3,.col-4,.col-6,.col-8,.col-12{grid-column:1/-1 !important;}
+    .navlinks{display:none;}
+    .kpi .big{font-size:32px;}
+  }
+  .col-2{grid-column:span 2;} .col-3{grid-column:span 3;} .col-4{grid-column:span 4;}
+  .col-6{grid-column:span 6;} .col-8{grid-column:span 8;} .col-12{grid-column:span 12;}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;}}
+</style>
+
+<div class="topbar"><div class="wrap">
+  <div class="brand"><span class="dot"></span> Infra Dashboard Review</div>
+  <nav class="navlinks">
+    <a href="#summary">Summary</a>
+    <a href="#notes">Your notes</a>
+    <a href="#corrections">Corrections</a>
+    <a href="#enhancements">Enhancements</a>
+    <a href="#mockup">Mock-up</a>
+    <a href="#guide">How-to</a>
+  </nav>
+  <button class="theme-btn" id="themeBtn" aria-label="Toggle light / dark theme">◐</button>
+</div></div>
+
+<header class="hero"><div class="wrap">
+  <p class="eyebrow">Observability · Elastic / Kibana · Prototype review</p>
+  <h1>Making the Infra Dashboard a real observability tool</h1>
+  <p class="lede">A review of the <b>Infra Dashboard Prototype</b> as it exists in <code>export.ndjson</code> — your five observations evaluated, the corrections I'd make, the gaps I'd fill, and a mock-up of where it should land.</p>
+  <div class="meta-row">
+    <span class="meta">Object: <b>1 dashboard · 19 panels</b></span>
+    <span class="meta">Sources: <b>metrics-* · servicenow-incidents-*</b></span>
+    <span class="meta">Reviewed: <b>4 Sep 2026</b></span>
+    <span class="meta">Verdict: <b>solid skeleton, needs hardening</b></span>
+  </div>
+</div></header>
+
+<!-- ===================== SUMMARY ===================== -->
+<section id="summary"><div class="wrap">
+  <p class="kicker">Executive summary</p>
+  <h2>The prototype is a good skeleton pointed at the right data — but it isn't yet safe to run a NOC on</h2>
+  <p class="section-lede">It already pulls from the two sources that matter (system metrics and ServiceNow incidents) and the CPU/memory heat tables are genuinely useful. The problems are that the "up / down / availability" numbers depend on settings the dashboard doesn't pin down, the incident panel isn't proven to be about infrastructure at all, two of the six sections are empty placeholders, and the whole thing has no filters, no history, and no auto-refresh.</p>
+
+  <div class="mgrid" style="gap:14px;">
+    <div class="panel col-4" style="border-radius:14px;">
+      <div class="kpi crit">
+        <div class="big">9</div>
+        <div class="panel-h" style="margin:10px 0 0;">Corrections to what's already there</div>
+        <div class="foot">3 of them are the issues you already flagged</div>
+      </div>
+    </div>
+    <div class="panel col-4" style="border-radius:14px;">
+      <div class="kpi" style="--x:0;"><div class="big" style="color:var(--accent);">11</div>
+        <div class="panel-h" style="margin:10px 0 0;">Enhancements that aren't there yet</div>
+        <div class="foot">Filters, trends, disk, incidents context, SLOs…</div>
+      </div>
+    </div>
+    <div class="panel col-4" style="border-radius:14px;">
+      <div class="kpi good"><div class="big">5 / 5</div>
+        <div class="panel-h" style="margin:10px 0 0;">Of your observations confirmed</div>
+        <div class="foot">All valid; two need a data question answered</div>
+      </div>
+    </div>
+  </div>
+
+  <h3>The five things that matter most</h3>
+  <div class="table-scroll">
+    <table class="grid">
+      <thead><tr><th>#</th><th>Headline</th><th>Why it bites</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td><b>"Down" is decided in a 5-minute window</b></td><td>A routine reboot or a brief ingest gap makes a healthy server show as down. Widen to 15 minutes (your note 1).</td></tr>
+        <tr><td>2</td><td><b>Availability math floats with the time picker</b></td><td>"Total monitored" counts any host seen in the current range, and no default range is saved — so the % is undefined until someone picks a range.</td></tr>
+        <tr><td>3</td><td><b>Incident counts aren't proven to be infra</b></td><td>P1/P2/P3 count ServiceNow incidents with no host/CI link — could be application tickets (your note 3).</td></tr>
+        <tr><td>4</td><td><b>Empty & duplicate sections</b></td><td>Oracle & MySQL show only "Detailed Dashboards" links, and all three links go to the same URL (your notes 4 & 5).</td></tr>
+        <tr><td>5</td><td><b>No filters, no history, no refresh</b></td><td>You can't slice by datacenter or OS, you can't see a trend, and nothing updates on its own.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div></section>
+
+<!-- ===================== YOUR NOTES ===================== -->
+<section id="notes"><div class="wrap">
+  <p class="kicker">Evaluating your observations</p>
+  <h2>Your five notes, assessed</h2>
+  <p class="section-lede">Short version: every one of them is valid. Two (incidents and the detailed-dashboard links) need a fact from the live environment before they can be closed out — I've marked those clearly.</p>
+
+  <div class="verdicts">
+    <details class="vcard" open><summary class="vhead">
+      <span class="vnum">01</span>
+      <span class="vtitle">Server Down window: now-5m → now-15m
+        <span class="sub">You suggested widening the window so a restart isn't counted as down.</span></span>
+      <span class="badge b-agree">Agree</span><span class="chev">▸</span>
+    </summary><div class="vbody">
+      <p>Confirmed and correct. In the export, <b>Servers Up</b> counts hosts with <code>@timestamp >= now-5m</code>, and <b>Servers Down</b> = total hosts − hosts seen in the last 5m. System metrics typically scrape every 10–60s, so a reboot, an agent restart, or a short ingest hiccup easily crosses a 5-minute line and flips a healthy host to "down."</p>
+      <p><strong>Recommendation:</strong> move to <code>now-15m</code> as you suggest — it's comfortably longer than a normal collection gap but still tight enough to catch a real outage. While you're in there, make the syntax consistent: "Servers Up" uses quoted <code>"now-5m"</code> while "Servers Down" and "Availability" use unquoted <code>now-5m</code>. Pick one.</p>
+    </div></details>
+
+    <details class="vcard"><summary class="vhead">
+      <span class="vnum">02</span>
+      <span class="vtitle">"Fleet" → "Server Availability"
+        <span class="sub">You want the "Fleet Availability %" tile renamed.</span></span>
+      <span class="badge b-agree">Agree</span><span class="chev">▸</span>
+    </summary><div class="vbody">
+      <p>Agree. The tile is labelled <b>Fleet Availability %</b> while the section header above it already says <b>Servers Availability</b> — so the page contradicts itself. "Fleet" is also ambiguous to anyone outside the team.</p>
+      <p><strong>Recommendation:</strong> rename the tile to <b>Server Availability %</b> so the label and the section agree. (This is a cosmetic fix; the number it produces still has the deeper issue in correction C3 below.)</p>
+    </div></details>
+
+    <details class="vcard"><summary class="vhead">
+      <span class="vnum">03</span>
+      <span class="vtitle">P1/P2/P3 incidents — are these actually infrastructure?
+        <span class="sub">Filters like <code>priority_name : "2 - High"</code> work, but you couldn't tie the incidents to a host.</span></span>
+      <span class="badge b-clarify">Agree · needs a data answer</span><span class="chev">▸</span>
+    </summary><div class="vbody">
+      <p>This is the sharpest observation, and it's right. The three tiles run <code>count()</code> on <code>servicenow-incidents-*</code> filtered only by <code>priority_name</code> — there is <b>no host, CI, or category filter</b>. Nothing in the panel constrains it to servers, so it will happily count application, network, or service-desk tickets too. In the export, the incidents index also carries no <code>host.*</code> field at all, which is exactly why you couldn't relate a record to a <code>host.name</code> in Discover.</p>
+      <p><strong>What to confirm:</strong> in Discover on <code>servicenow-incidents-*</code>, look for a CI/asset field — commonly <code>cmdb_ci</code>, <code>cmdb_ci.name</code>, <code>ci.name</code>, <code>u_host</code>, or a category like <code>category: "Server"</code>.</p>
+      <p><strong>Then decide:</strong> if such a field exists, add a filter (e.g. <code>cmdb_ci : *</code> plus an infra category) so the panel is genuinely infrastructure incidents. If it doesn't, this panel can't claim to be infra — relabel it honestly as <b>ServiceNow Incidents (all)</b> and move it, or drop it from an <i>infra</i> dashboard. Don't leave it implying something the data can't back.</p>
+    </div></details>
+
+    <details class="vcard"><summary class="vhead">
+      <span class="vnum">04</span>
+      <span class="vtitle">Oracle tab: Dashboard 1 / 2 / 3 all point to the same place
+        <span class="sub">You asked whether that's intended and want them renamed to their function.</span></span>
+      <span class="badge b-agree">Agree</span><span class="chev">▸</span>
+    </summary><div class="vbody">
+      <p>Confirmed in the export: under <b>Oracle Servers</b>, all three links — Dashboard 1, Dashboard 2, Dashboard 3 — resolve to the identical URL (<code>…/app/r/s/tf0R3</code>, "Prototype Infrastructure Dashboard KPIs"). As written they're placeholders, not three destinations.</p>
+      <p><strong>Recommendation:</strong> this is almost certainly unintended. Either wire each to the dashboard it's meant to open and rename it to what it shows (e.g. "Oracle — Tablespace & Sessions", "Oracle — Wait Events"), or collapse to a single correctly-named link until the others exist. A link named "Dashboard 2" tells the reader nothing.</p>
+    </div></details>
+
+    <details class="vcard"><summary class="vhead">
+      <span class="vnum">05</span>
+      <span class="vtitle">MySQL tab: same duplicate links as Oracle
+        <span class="sub">Same three-links-one-URL problem under MySQL.</span></span>
+      <span class="badge b-agree">Agree</span><span class="chev">▸</span>
+    </summary><div class="vbody">
+      <p>Same finding, same fix. The MySQL section's three "Detailed Dashboards" links are identical to Oracle's and point to the same <code>tf0R3</code> URL. Treat it exactly as note 4: give each link a real destination and a functional name, or reduce to one.</p>
+      <p><strong>Worth adding:</strong> both the Oracle and MySQL sections contain <i>only</i> these links — no metrics of their own. See correction C6: those two tiers are effectively unmonitored on this dashboard today.</p>
+    </div></details>
+  </div>
+</div></section>
+
+<!-- ===================== CORRECTIONS ===================== -->
+<section id="corrections"><div class="wrap">
+  <p class="kicker">Corrections · things already on the dashboard</p>
+  <h2>What I'd change about the current panels</h2>
+  <p class="section-lede">These are fixes to existing behaviour — the numbers or labels that are there today but are misleading, inconsistent, or incomplete. C1, C2 and C5 are your notes; the rest came out of reading the panel definitions.</p>
+
+  <div class="table-scroll">
+    <table class="grid">
+      <thead><tr><th>ID</th><th>Correction</th><th>What's there now → what it should be</th><th>Severity</th></tr></thead>
+      <tbody>
+        <tr><td>C1</td><td><b>Widen down-detection to 15m</b></td><td>Up/Down/Availability keyed on <code>now-5m</code> → <code>now-15m</code>, and make quoted/unquoted syntax consistent. <span class="tag t-new">your note 1</span></td><td><span class="tag t-crit">High</span></td></tr>
+        <tr><td>C2</td><td><b>Rename "Fleet Availability %"</b></td><td>"Fleet Availability %" → <b>"Server Availability %"</b>, matching the section header. <span class="tag t-new">your note 2</span></td><td><span class="tag t-low">Low</span></td></tr>
+        <tr><td>C3</td><td><b>Fix the availability baseline</b></td><td>Denominator is <code>unique_count(host.name)</code> over the current picker range, so "monitored" (and thus "down") drifts with the time range. → Count against a stable baseline, ideally CMDB (<code>ci.is_monitored: true</code> / <code>ci.operational_status</code>).</td><td><span class="tag t-crit">High</span></td></tr>
+        <tr><td>C4</td><td><b>Prove incidents are infra</b></td><td>P1/P2/P3 filter on <code>priority_name</code> only, no host/CI link. → Add a CI/category filter, or relabel & relocate. <span class="tag t-new">your note 3</span></td><td><span class="tag t-crit">High</span></td></tr>
+        <tr><td>C5</td><td><b>Fix the detailed-dashboard links</b></td><td>Oracle & MySQL "Dashboard 1/2/3" all → same <code>tf0R3</code> URL. → Real destinations + functional names, or one link each. <span class="tag t-new">your notes 4 & 5</span></td><td><span class="tag t-med">Medium</span></td></tr>
+        <tr><td>C6</td><td><b>Populate or drop Oracle & MySQL</b></td><td>Both sections contain only links — zero metrics. → Add DB-tier panels (CPU/mem/connections/tablespace) or remove until ready.</td><td><span class="tag t-med">Medium</span></td></tr>
+        <tr><td>C7</td><td><b>"Linux" only matches RedHat</b></td><td>Linux tables filter <code>host.os.family == "redhat"</code>, silently excluding Ubuntu/Debian/CentOS/SUSE/Amazon/etc. → Broaden the filter, or rename the section "RHEL / RedHat Servers".</td><td><span class="tag t-med">Medium</span></td></tr>
+        <tr><td>C8</td><td><b>Clean up the tables</b></td><td>The four heat tables still carry the default saved title <code>"Bar vertical stacked"</code> and stale duplicate column definitions. → Give each a real title (e.g. "Windows — CPU % by host") and tidy columns.</td><td><span class="tag t-low">Low</span></td></tr>
+        <tr><td>C9</td><td><b>Save a default range + auto-refresh</b></td><td><code>timeRestore:false</code>, <code>refreshInterval:null</code> — no saved range, no refresh. → Default to Last 1h, auto-refresh 1m, Save with "Store time with dashboard".</td><td><span class="tag t-crit">High</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div></section>
+
+<!-- ===================== ENHANCEMENTS ===================== -->
+<section id="enhancements"><div class="wrap">
+  <p class="kicker">Enhancements · things not on the dashboard yet</p>
+  <h2>What would make it a proper observability dashboard</h2>
+  <p class="section-lede">The prototype answers "how many servers are up and how many tickets are open." A real infra dashboard also answers <i>which</i> ones, <i>since when</i>, <i>is it getting worse</i>, and <i>am I even still receiving data</i>. Several of these use fields the pipeline already collects.</p>
+
+  <div class="table-scroll">
+    <table class="grid">
+      <thead><tr><th>ID</th><th>Enhancement</th><th>What it adds</th><th>Effort</th></tr></thead>
+      <tbody>
+        <tr><td>E1</td><td><b>Filter / control bar</b></td><td>Kibana Controls for datacenter (<code>relay.dc</code>), OS family, CI operational status, and a host search. Today there is zero filtering — you can't scope to a DC or drill to a host.</td><td><span class="tag t-low">Low</span></td></tr>
+        <tr><td>E2</td><td><b>Trends, not just point-in-time</b></td><td>An availability-over-time line and CPU/mem trend so you can see direction and spot degradation before it's an outage.</td><td><span class="tag t-med">Med</span></td></tr>
+        <tr><td>E3</td><td><b>A "down hosts" list</b></td><td>The count of down servers isn't actionable — add the actual list (host, last-seen, DC, OS, owner) so responders know where to go.</td><td><span class="tag t-low">Low</span></td></tr>
+        <tr><td>E4</td><td><b>Disk & network</b></td><td>Only CPU & memory are shown. Filesystem usage (<code>system.filesystem.used.pct</code>) and network throughput/errors — disk-full is a leading incident cause and is invisible today.</td><td><span class="tag t-med">Med</span></td></tr>
+        <tr><td>E5</td><td><b>SLO & thresholds/alerts</b></td><td>An availability SLO tile with error budget, reference lines on the heat tables, and Elastic alerting rules so problems page someone instead of waiting to be noticed.</td><td><span class="tag t-med">Med</span></td></tr>
+        <tr><td>E6</td><td><b>Incident context</b></td><td>Incidents-over-time by priority, open vs. resolved, MTTR / ageing, and top affected CIs — turns three counts into triage.</td><td><span class="tag t-med">Med</span></td></tr>
+        <tr><td>E7</td><td><b>Service & process health</b></td><td>The metrics index already carries <code>windows.service.*</code>, <code>process.*</code>, <code>system.process.state</code>. Surface stopped critical services / dead processes — high value, already ingested.</td><td><span class="tag t-low">Low</span></td></tr>
+        <tr><td>E8</td><td><b>CMDB enrichment</b></td><td>Use <code>ci.name</code>, <code>ci.geo.name</code>, <code>ci.operational_status</code>, <code>ci.short_description</code> to group by business service / location and show ownership — and to anchor the availability baseline (C3).</td><td><span class="tag t-med">Med</span></td></tr>
+        <tr><td>E9</td><td><b>Monitor the monitor</b></td><td><code>ingest_lag_in_sec</code> and <code>error.message</code> exist — add a data-freshness / agent-health panel. Given the now-15m up/down logic, a silent pipeline stall would otherwise read as a mass outage.</td><td><span class="tag t-low">Low</span></td></tr>
+        <tr><td>E10</td><td><b>One fleet model + coverage</b></td><td>Define the expected fleet once from CMDB and show coverage, so a whole OS or tier that isn't reporting shows as a gap instead of silently missing.</td><td><span class="tag t-med">Med</span></td></tr>
+        <tr><td>E11</td><td><b>Legends, units & "as of"</b></td><td>The heat colours have no legend and the KPIs no timestamp. Add a threshold legend, explicit units, and a "data as of" indicator.</td><td><span class="tag t-low">Low</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div></section>
+
+<!-- ===================== MOCKUP ===================== -->
+<section id="mockup"><div class="wrap">
+  <p class="kicker">Mock-up · target state</p>
+  <h2>What the enhanced dashboard could look like</h2>
+  <p class="section-lede">A layout that keeps what works (the heat tables) and adds the missing layers: a control bar, an actionable availability strip with trend and an SLO, infra-scoped incidents with history, disk alongside CPU/memory, a real down-hosts list, and a pipeline-health check.</p>
+  <p class="mock-note"><span class="swatch"></span>Illustrative layout with sample figures — not live data. Panels marked <span class="tag t-new" style="vertical-align:middle;">NEW</span> are proposed additions.</p>
+
+  <div class="console">
+    <div class="console-bar">
+      <div class="console-title">Infrastructure Health <span class="live">live</span></div>
+      <div class="console-right">
+        <span class="pill time">🕑 Last 1 hour</span>
+        <span class="pill">⟳ auto-refresh <b>1m</b></span>
+        <span class="pill">as of <b>14:32:07</b></span>
+      </div>
+    </div>
+
+    <!-- control bar (E1) -->
+    <div class="controls">
+      <div class="ctrl enh"><span>Datacenter · relay.dc</span><b>All (4) ▾</b></div>
+      <div class="ctrl enh"><span>OS family</span><b>All ▾</b></div>
+      <div class="ctrl enh"><span>CI status</span><b>Operational ▾</b></div>
+      <div class="ctrl enh" style="flex:1;min-width:180px;"><span>Search host.name</span><b style="color:var(--muted);font-weight:400;">e.g. prd-ora-*</b></div>
+    </div>
+
+    <div class="mgrid">
+      <!-- ===== availability strip ===== -->
+      <div class="sec-label">Server availability</div>
+
+      <div class="panel col-2 kpi"><div class="panel-h">Monitored</div>
+        <div class="big">248</div><div class="foot">CMDB baseline</div></div>
+
+      <div class="panel col-2 kpi good"><div class="panel-h">Up <span style="color:var(--muted);font-weight:400;">15m</span></div>
+        <div class="big">244</div><div class="foot">reporting</div></div>
+
+      <div class="panel col-2 kpi crit"><div class="panel-h">Down</div>
+        <div class="big">4</div><div class="foot">no data 15m</div></div>
+
+      <div class="panel col-3 kpi good"><div class="panel-h">Server Availability % <span class="delta down">▾ 0.4%</span></div>
+        <div class="big">98.4<span class="unit">%</span></div>
+        <svg class="spark" viewBox="0 0 220 34" preserveAspectRatio="none" aria-hidden="true">
+          <polyline fill="none" stroke="var(--good)" stroke-width="2"
+            points="0,8 24,7 48,9 72,6 96,10 120,8 144,12 168,9 192,18 216,14"/>
+        </svg>
+      </div>
+
+      <div class="panel col-3 kpi"><div class="panel-h">Availability SLO <span class="newtag">NEW · E5</span></div>
+        <div class="big" style="color:var(--warn);">99.4<span class="unit">% / 99.9 target</span></div>
+        <div class="foot">error budget: 41% used this month</div>
+        <div class="stkbar"><span style="width:59%;background:var(--good);"></span><span style="width:41%;background:var(--warn);"></span></div>
+      </div>
+
+      <!-- down hosts list (E3) -->
+      <div class="panel col-8"><div class="panel-h">Servers not reporting <span class="newtag">NEW · E3</span></div>
+        <table class="dt">
+          <thead><tr><th>Host</th><th>Last seen</th><th>DC</th><th>OS</th><th>CI owner</th></tr></thead>
+          <tbody>
+            <tr><td class="host">prd-ora-04</td><td>27m ago</td><td>gcp-us-e1</td><td>redhat</td><td>DBA — Payments</td></tr>
+            <tr><td class="host">prd-win-11</td><td>52m ago</td><td>gcp-eu-w1</td><td>windows</td><td>WinOps</td></tr>
+            <tr><td class="host">stg-mysql-02</td><td>1h 4m ago</td><td>gcp-us-e1</td><td>debian</td><td>DBA — Catalog</td></tr>
+            <tr><td class="host">prd-app-27</td><td>1h 9m ago</td><td>gcp-us-c1</td><td>ubuntu</td><td>Platform</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- data freshness (E9) -->
+      <div class="panel col-4"><div class="panel-h">Pipeline health <span class="newtag">NEW · E9</span></div>
+        <div class="kpi good" style="margin-bottom:6px;"><div class="big" style="font-size:30px;">6<span class="unit">s</span></div>
+        <div class="foot">median ingest lag · <code style="font-size:11px;">ingest_lag_in_sec</code></div></div>
+        <table class="dt" style="margin-top:10px;">
+          <tbody>
+            <tr><td class="host">agents reporting</td><td class="num">244 / 248</td></tr>
+            <tr><td class="host">ingest errors 1h</td><td class="num"><span class="heat h-y">3</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ===== incidents ===== -->
+      <div class="sec-label">Infrastructure incidents <span style="text-transform:none;letter-spacing:0;color:var(--accent);">scoped to CIs with a host — see C4</span></div>
+
+      <div class="panel col-2"><div class="panel-h">By priority</div>
+        <div class="prio"><span class="lab"><span class="sev" style="background:var(--p1);"></span>P1 · Critical</span><span class="cnt" style="color:var(--p1);">2</span></div>
+        <div class="prio"><span class="lab"><span class="sev" style="background:var(--p2);"></span>P2 · High</span><span class="cnt" style="color:var(--p2);">7</span></div>
+        <div class="prio"><span class="lab"><span class="sev" style="background:var(--p3);"></span>P3 · Medium</span><span class="cnt" style="color:var(--p3);">15</span></div>
+      </div>
+
+      <div class="panel col-6"><div class="panel-h">Open incidents over time <span class="newtag">NEW · E6</span></div>
+        <svg class="spark" viewBox="0 0 400 90" preserveAspectRatio="none" style="height:90px;" aria-hidden="true">
+          <g stroke="var(--border)" stroke-width="1">
+            <line x1="0" y1="22" x2="400" y2="22"/><line x1="0" y1="44" x2="400" y2="44"/><line x1="0" y1="66" x2="400" y2="66"/>
+          </g>
+          <polygon fill="var(--p3)" opacity="0.16" points="0,70 50,64 100,66 150,58 200,60 250,50 300,54 350,46 400,44 400,88 0,88"/>
+          <polyline fill="none" stroke="var(--p3)" stroke-width="2" points="0,70 50,64 100,66 150,58 200,60 250,50 300,54 350,46 400,44"/>
+          <polyline fill="none" stroke="var(--p2)" stroke-width="2" points="0,78 50,76 100,74 150,72 200,70 250,66 300,68 350,62 400,60"/>
+          <polyline fill="none" stroke="var(--p1)" stroke-width="2.2" points="0,84 50,84 100,82 150,83 200,80 250,81 300,79 350,80 400,78"/>
+        </svg>
+        <div class="legend">
+          <span><i style="background:var(--p1);"></i>P1</span><span><i style="background:var(--p2);"></i>P2</span>
+          <span><i style="background:var(--p3);"></i>P3</span><span style="margin-left:auto;">24h · open count</span>
+        </div>
+      </div>
+
+      <div class="panel col-4"><div class="panel-h">MTTR &amp; ageing <span class="newtag">NEW · E6</span></div>
+        <table class="dt">
+          <tbody>
+            <tr><td class="host">MTTR (P1)</td><td class="num">2h 41m</td></tr>
+            <tr><td class="host">open &gt; 24h</td><td class="num"><span class="heat h-y">5</span></td></tr>
+            <tr><td class="host">open &gt; 72h</td><td class="num"><span class="heat h-r">2</span></td></tr>
+            <tr><td class="host">top CI</td><td class="num" style="font-size:11.5px;">prd-ora-04</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ===== resource utilisation ===== -->
+      <div class="sec-label">Resource utilisation · by host</div>
+
+      <div class="panel col-4"><div class="panel-h">Windows — CPU % <span style="color:var(--muted);font-weight:400;">avg</span></div>
+        <table class="dt">
+          <thead><tr><th>Host</th><th style="text-align:right;">CPU</th></tr></thead>
+          <tbody>
+            <tr><td class="host">prd-win-03</td><td class="num"><span class="heat h-r">94.1%</span></td></tr>
+            <tr><td class="host">prd-win-08</td><td class="num"><span class="heat h-y">81.7%</span></td></tr>
+            <tr><td class="host">prd-win-01</td><td class="num"><span class="heat h-g">44.2%</span></td></tr>
+            <tr><td class="host">stg-win-02</td><td class="num"><span class="heat h-g">22.8%</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="panel col-4"><div class="panel-h">Linux — CPU % <span class="newtag">C7 fixed</span></div>
+        <table class="dt">
+          <thead><tr><th>Host</th><th style="text-align:right;">CPU</th></tr></thead>
+          <tbody>
+            <tr><td class="host">prd-ora-02</td><td class="num"><span class="heat h-r">91.5%</span></td></tr>
+            <tr><td class="host">prd-app-14</td><td class="num"><span class="heat h-y">78.3%</span></td></tr>
+            <tr><td class="host">prd-mysql-01</td><td class="num"><span class="heat h-g">51.0%</span></td></tr>
+            <tr><td class="host">prd-app-27</td><td class="num"><span class="heat h-g">18.6%</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="panel col-4"><div class="panel-h">Disk % — worst mount <span class="newtag">NEW · E4</span></div>
+        <table class="dt">
+          <thead><tr><th>Host · mount</th><th style="text-align:right;">Used</th></tr></thead>
+          <tbody>
+            <tr><td class="host">prd-mysql-01 /data</td><td class="num"><span class="heat h-r">96.4%</span></td></tr>
+            <tr><td class="host">prd-ora-02 /u01</td><td class="num"><span class="heat h-r">92.0%</span></td></tr>
+            <tr><td class="host">prd-win-03 C:</td><td class="num"><span class="heat h-y">84.9%</span></td></tr>
+            <tr><td class="host">prd-app-14 /var</td><td class="num"><span class="heat h-g">61.2%</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="panel col-12">
+        <div class="legend" style="margin-top:2px;">
+          <span style="color:var(--ink-2);font-weight:600;">Heat thresholds</span>
+          <span><i style="background:var(--good);"></i>&lt; 70% healthy</span>
+          <span><i style="background:var(--warn);"></i>70–85% watch</span>
+          <span><i style="background:var(--crit);"></i>&gt; 85% critical</span>
+          <span style="margin-left:auto;">Same palette as today's tables — now with a visible legend (E11)</span>
+        </div>
+      </div>
+
+    </div><!-- /mgrid -->
+  </div><!-- /console -->
+</div></section>
+
+<!-- ===================== GUIDE ===================== -->
+<section id="guide"><div class="wrap">
+  <p class="kicker">Step-by-step</p>
+  <h2>How to make the changes</h2>
+  <p class="section-lede">Do the corrections first — they're mostly edits to panels that already exist and they make today's numbers trustworthy. Then layer the enhancements. Everything is in Kibana → Dashboards → <b>Infra Dashboard Prototype</b> → <b>Edit</b>; snippets below are the exact formulas and ES|QL to paste.</p>
+
+  <div class="phase"><span>Phase 1 — Corrections</span> make today's numbers trustworthy</div>
+  <div class="steps">
+
+    <div class="step">
+      <span class="where">Panel: Servers Up · Servers Down · Availability</span>
+      <h4>C1 — Widen the window to 15 minutes and make it consistent</h4>
+      <p>Edit each of the three availability panels and replace the 5-minute window. Use unquoted date math everywhere so the three panels match.</p>
+      <pre><span class="cm"># Servers Up  — filter on the unique_count column</span>
+@timestamp >= now-15m
+
+<span class="cm"># Servers Down — formula</span>
+unique_count(host.name) - unique_count(host.name, <span class="kw">kql</span>=<span class="st">'@timestamp >= now-15m'</span>)
+
+<span class="cm"># Server Availability % — formula</span>
+unique_count(host.name, <span class="kw">kql</span>=<span class="st">'@timestamp >= now-15m'</span>) / unique_count(host.name)</pre>
+    </div>
+
+    <div class="step">
+      <span class="where">Panel: Fleet Availability %</span>
+      <h4>C2 — Rename the tile to "Server Availability %"</h4>
+      <p>Open the metric panel, and in the formula column's <b>Display name</b> (the custom label) change <code>Fleet Availability %</code> to <code>Server Availability %</code>. Confirm it matches the "Servers Availability" section header above it.</p>
+    </div>
+
+    <div class="step">
+      <span class="where">Panels: availability trio · optional but recommended</span>
+      <h4>C3 — Anchor the baseline so the % stops drifting</h4>
+      <p>Today "monitored" is "any host seen in the current time range," so a wide picker inflates it (and inflates "down") with rebooted or decommissioned hosts. Anchor the denominator to a stable expected set. If your CMDB fields are populated, count only monitored, operational CIs:</p>
+      <pre><span class="cm"># denominator, using CMDB attributes present on metrics-*</span>
+unique_count(host.name, <span class="kw">kql</span>=<span class="st">'ci.is_monitored: true and ci.operational_status: "Operational"'</span>)</pre>
+      <p>If CMDB isn't reliable yet, at minimum pin the dashboard time range (C9) so the number is defined and reproducible.</p>
+    </div>
+
+    <div class="step">
+      <span class="where">Discover → servicenow-incidents-*  ·  then the P1/P2/P3 panels</span>
+      <h4>C4 — Prove (or relabel) the incidents panel</h4>
+      <p>In Discover, open <code>servicenow-incidents-*</code> and check for a CI / asset / category field — likely <code>cmdb_ci</code>, <code>ci.name</code>, <code>u_host</code>, or <code>category</code>. Then either scope the three panels to infrastructure, or relabel them honestly.</p>
+      <pre><span class="cm"># if a CI field exists — add to each panel's KQL filter</span>
+priority_name : "1 - Critical" <span class="kw">and</span> cmdb_ci : *
+
+<span class="cm"># if no host/CI link exists — this isn't an infra panel:</span>
+<span class="cm"># rename section to "ServiceNow Incidents (all priorities)" and relocate</span></pre>
+    </div>
+
+    <div class="step">
+      <span class="where">Markdown panels: Oracle &amp; MySQL "Detailed Dashboards"</span>
+      <h4>C5 — Give the links real destinations and names</h4>
+      <p>Edit both markdown panels. Replace the three identical <code>tf0R3</code> links with the dashboards they're meant to open, named by function. If only one exists today, ship one link — don't pad to three.</p>
+      <pre><span class="cm">### Oracle — Detailed Dashboards ###</span>
+[Tablespace &amp; Sessions](https://kibana-prod.gcp.cna.com/app/r/s/&lt;id-1&gt;)
+[Wait Events &amp; Locks](https://kibana-prod.gcp.cna.com/app/r/s/&lt;id-2&gt;)
+[Backup &amp; Data Guard](https://kibana-prod.gcp.cna.com/app/r/s/&lt;id-3&gt;)</pre>
+    </div>
+
+    <div class="step">
+      <span class="where">Sections: Oracle &amp; MySQL</span>
+      <h4>C6 — Populate the DB tiers, or drop them for now</h4>
+      <p>Both sections currently show links only. Either add DB-tier panels (host CPU/mem for those hosts, plus DB metrics — connections, tablespace/buffer usage if collected) or hide the sections until the data exists, so the dashboard doesn't imply coverage it doesn't have.</p>
+    </div>
+
+    <div class="step">
+      <span class="where">Panels: Linux — CPU % and Memory % (ES|QL)</span>
+      <h4>C7 — Make "Linux" mean Linux (or rename it)</h4>
+      <p>The Linux tables match only <code>redhat</code>. Broaden to all non-Windows hosts (simplest robust definition), or rename the section to "RHEL Servers" if RedHat-only is intended.</p>
+      <pre><span class="kw">FROM</span> .ds-metrics-system.cpu-default*
+  | <span class="kw">WHERE</span> host.os.family != <span class="st">"windows"</span> <span class="kw">AND</span> system.cpu.total.norm.pct <span class="kw">IS NOT NULL</span>
+  | <span class="kw">STATS</span> cpu_pct = <span class="kw">AVG</span>(system.cpu.total.norm.pct) <span class="kw">BY</span> host.name, host.os.family
+  | <span class="kw">SORT</span> cpu_pct <span class="kw">DESC</span></pre>
+    </div>
+
+    <div class="step">
+      <span class="where">Panels: the four heat tables</span>
+      <h4>C8 — Rename tables and clean stale columns</h4>
+      <p>Each table still has the saved title <code>Bar vertical stacked</code> and duplicate <code>cpu_pct</code>/<code>memory_pct</code> column definitions. Rename to what it shows (e.g. "Windows — CPU % by host") and remove the unused columns so exports stay clean.</p>
+    </div>
+
+    <div class="step">
+      <span class="where">Dashboard settings → Save</span>
+      <h4>C9 — Save a default range and turn on auto-refresh</h4>
+      <p>Set the time picker to <b>Last 1 hour</b>, enable auto-refresh at <b>1 minute</b>, then <b>Save</b> with <b>"Store time with dashboard"</b> ticked. This makes every viewer land on the same, well-defined range — which is also what makes the C1/C3 availability math reproducible.</p>
+    </div>
+  </div>
+
+  <div class="phase"><span>Phase 2 — Enhancements</span> turn it into an observability tool</div>
+  <div class="steps">
+
+    <div class="step">
+      <span class="where">Dashboard → Controls</span>
+      <h4>E1 — Add a filter bar</h4>
+      <p>Add <b>Options list</b> controls for <code>relay.dc</code> (datacenter), <code>host.os.family</code>, and <code>ci.operational_status</code>, plus a <b>host.name</b> search control. With chaining on, selections cascade to every panel — the fastest single win here.</p>
+    </div>
+
+    <div class="step">
+      <span class="where">New ES|QL table · top of dashboard</span>
+      <h4>E3 — Add the "servers not reporting" list</h4>
+      <p>Turn the "down" count into an actionable list. This finds hosts whose most recent metric is older than 15 minutes.</p>
+      <pre><span class="kw">FROM</span> .ds-metrics-system.cpu-default*
+  | <span class="kw">STATS</span> last_seen = <span class="kw">MAX</span>(@timestamp) <span class="kw">BY</span> host.name, host.os.family, relay.dc
+  | <span class="kw">WHERE</span> last_seen &lt; <span class="kw">NOW</span>() - 15 minutes
+  | <span class="kw">SORT</span> last_seen <span class="kw">ASC</span></pre>
+    </div>
+
+    <div class="step">
+      <span class="where">New ES|QL table · resource row</span>
+      <h4>E4 — Add disk (and later, network)</h4>
+      <p>Surface the fullest filesystem per host and flag anything above 80%. Same heat palette as the CPU/mem tables so it reads consistently.</p>
+      <pre><span class="kw">FROM</span> .ds-metrics-system.filesystem-default*
+  | <span class="kw">WHERE</span> system.filesystem.used.pct <span class="kw">IS NOT NULL</span>
+  | <span class="kw">STATS</span> disk_pct = <span class="kw">MAX</span>(system.filesystem.used.pct) <span class="kw">BY</span> host.name, system.filesystem.mount_point
+  | <span class="kw">WHERE</span> disk_pct &gt; 0.8
+  | <span class="kw">SORT</span> disk_pct <span class="kw">DESC</span></pre>
+    </div>
+
+    <div class="step">
+      <span class="where">New Lens line chart · availability strip</span>
+      <h4>E2 — Add availability &amp; utilisation trends</h4>
+      <p>Add a Lens line of hosts-reporting (unique_count of <code>host.name</code>) over a date histogram, and a CPU/mem trend. A trend shows whether you're heading toward an outage; the current single numbers can't.</p>
+    </div>
+
+    <div class="step">
+      <span class="where">New ES|QL table · service health</span>
+      <h4>E7 — Surface stopped services / dead processes</h4>
+      <p>The data is already flowing. List Windows services that should be running but aren't (and equivalently <code>process.*</code> / <code>system.process.state</code> for Linux daemons).</p>
+      <pre><span class="kw">FROM</span> .ds-metrics-windows.service-default*
+  | <span class="kw">WHERE</span> windows.service.state != <span class="st">"Running"</span>
+      <span class="kw">AND</span> windows.service.start_type == <span class="st">"Automatic"</span>
+  | <span class="kw">KEEP</span> host.name, windows.service.display_name, windows.service.state
+  | <span class="kw">SORT</span> host.name</pre>
+    </div>
+
+    <div class="step">
+      <span class="where">New Lens metric · pipeline health</span>
+      <h4>E9 — Monitor the monitor</h4>
+      <p>Add a data-freshness panel: median <code>ingest_lag_in_sec</code>, agents-reporting vs. expected, and a count of <code>error.message</code>. With now-15m up/down logic, a stalled pipeline would otherwise look like a mass outage — this tells you which it is.</p>
+    </div>
+
+    <div class="step">
+      <span class="where">Elastic → Observability → SLOs &amp; Alerting</span>
+      <h4>E5 · E6 — SLO, thresholds, and incident context</h4>
+      <p>Define an availability <b>SLO</b> (e.g. 99.9%) with an error-budget tile, add reference lines to the heat tables, and create <b>alerting rules</b> so breaches page someone. For incidents, add over-time-by-priority, open vs. resolved, MTTR/ageing, and top affected CIs.</p>
+    </div>
+
+    <div class="step">
+      <span class="where">Cross-cutting</span>
+      <h4>E8 · E10 · E11 — CMDB grouping, fleet coverage, and polish</h4>
+      <p>Group panels by <code>ci.geo.name</code> / business service and show owners; define the expected fleet once from CMDB so missing tiers appear as coverage gaps; and add the threshold legend, explicit units, and a "data as of" note (already sketched in the mock-up).</p>
+    </div>
+  </div>
+
+  <div class="callout">
+    <b>Suggested order of play.</b> Ship Phase 1 as one change — it's low-risk and makes the current numbers honest (and closes your five notes). Then take Phase 2 in slices: <b>E1 filters + E3 down-list + E9 pipeline health</b> first (fast, high value), then <b>E4 disk + E2 trends</b>, then <b>E5/E6 SLO &amp; incident context</b> once C4's data question is answered.
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  <span>Infra Dashboard Prototype · review of export.ndjson</span>
+  <span>Sources: metrics-* · servicenow-incidents-*</span>
+</div></footer>
+
+<script>
+  (function(){
+    var btn=document.getElementById('themeBtn');
+    var root=document.documentElement;
+    function cur(){
+      var s=root.getAttribute('data-theme');
+      if(s) return s;
+      return window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
+    }
+    try{var saved=localStorage.getItem('idr-theme'); if(saved) root.setAttribute('data-theme',saved);}catch(e){}
+    btn.addEventListener('click',function(){
+      var next=cur()==='dark'?'light':'dark';
+      root.setAttribute('data-theme',next);
+      try{localStorage.setItem('idr-theme',next);}catch(e){}
+    });
+  })();
+</script>
