@@ -1,0 +1,11 @@
+I got the following :​‌
+
+no viable alternative at input 'last ='
+
+when I ran the following query:
+
+FROM metric*
+| WHERE windows.service.state != "Running" AND windows.service.start_type == "Automatic"
+| STATS last = MAX(@timestamp) BY host.name, windows.service.display_name, windows.service.state
+| SORT host.name ASC
+| LIMIT 200
