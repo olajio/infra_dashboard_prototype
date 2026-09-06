@@ -24,13 +24,15 @@ Before building any panel:
 | # Active Major Incidents | ✅ Achieved | "Active P1/P2" metric tile, row 1 |
 | MTTR (P1+P2) | ✅ Achieved (fixed) | "MTTR (Median, P1+P2)" metric tile, row 1 |
 | Incidents by Service/Team | ✅ Achieved | "Incidents by CI / Support Team" datatable, row 3 |
-| Recurrence Rate | ✅ Achieved (new) | "Recurrence — CIs with Multiple P1/P2 Incidents" table, row 4 |
-| Closure Rate % | ✅ Achieved (new) | "Closure Rate %" metric tile, row 1 |
+| Recurrence Rate (% metric) | ✅ Achieved (new) | "Recurrence Rate (P1+P2)" metric tile + repeat-offender list, row 4 |
+| Closure Rate % | ✅ Achieved (new) | "Closure Rate % (P1+P2)" metric tile, row 1 |
 | MTTR Trend | ✅ Achieved (fixed) | "MTTR Trend (Median P1+P2, per day)" line chart, row 2 |
-| Incident Volume Over Time | ✅ Achieved (new) | "Incident Volume Over Time" line chart, row 2 |
+| Incident Volume Over Time | ✅ Achieved (new) | "Incident Volume Over Time (by Priority)" multi-series line, row 2 |
 | Open Incident Ageing | ✅ Achieved (new) | "Open P1/P2 Incidents (Ageing)" table, row 4 |
-| Contact Type Breakdown | ✅ Achieved (new) | "Contact Type (P1/P2)" table, row 5 |
+| Detection Source | ✅ Achieved (new) | "Detection Source (All Incidents)" table, row 5 |
 | Top Affected CIs | ✅ Achieved (new) | "Top Affected CIs" table, row 5 |
+| Business Service Impact | ✅ Achieved (new) | "Business Service Impact (P1+P2)" table, row 5 |
+| Assignment Group Load | ✅ Achieved (new) | "Assignment Group Load" table, row 6 |
 | MTTA | ❌ Not achievable | `acknowledged_at` field missing — see Section 4 |
 | TTD (Declare Major) | ❌ Not achievable | `major_declared_at` field missing — see Section 4 |
 | Time to Stabilize | ❌ Not achievable | `stabilized_at` field missing — see Section 4 |
@@ -84,15 +86,16 @@ Already built in the imported dashboard. If you need to rebuild it:
 
 ### 3.3 Closure Rate % (ES|QL metric)
 
+`COUNT(field)` in ES|QL counts non-null values, so `COUNT(resolved_at)` is exactly the number of incidents that have been closed.
+
 ```esql
 FROM servicenow-incidents-*
 | WHERE priority IN (1, 2)
-| STATS total = COUNT(*),
-        closed = COUNT_DISTINCT(CASE(resolved_at IS NOT NULL, number, null))
-| EVAL metric_val = ROUND(closed / total * 100.0, 1)
+| STATS total = COUNT(*), closed = COUNT(resolved_at)
+| EVAL metric_val = ROUND(TO_DOUBLE(closed) / TO_DOUBLE(total) * 100.0, 1)
 ```
 
-Format: **Percent** (1 decimal). Label: `Closed / Total (%)`.
+Format: **Number** with suffix `%`, 1 decimal. Label: `Resolved / Opened`.
 
 ---
 
@@ -144,9 +147,23 @@ Columns: CI Name | Support Team | P1 | P2 | P3 | Total
 
 ---
 
-### 3.7 Recurrence Rate — CIs with Multiple P1/P2 Incidents
+### 3.7 Recurrence Rate — real percentage + list of offenders
 
-This KPI answers: "Which CIs keep breaking?" — i.e., repeat major incidents on the same application within the dashboard's time window.
+Two panels together: a **metric tile** with the actual recurrence rate as a %, and a **table** listing the repeat-offender CIs.
+
+**Metric — recurrence rate as a percentage:**
+
+```esql
+FROM servicenow-incidents-*
+| WHERE priority IN (1, 2)
+| STATS n = COUNT(*) BY ci.name
+| STATS repeat = COUNT(CASE(n > 1, 1, null)), total_cis = COUNT(*)
+| EVAL metric_val = ROUND(TO_DOUBLE(repeat) / TO_DOUBLE(total_cis) * 100.0, 1)
+```
+
+Format: **Number** with suffix `%`, 1 decimal. Label: `% of CIs with >1 major incident`.
+
+**Table — the repeat-offender list:**
 
 ```esql
 FROM servicenow-incidents-*
@@ -157,9 +174,7 @@ FROM servicenow-incidents-*
 | LIMIT 25
 ```
 
-Columns: CI Name | Incident Count
-
-> This is achievable — the KPI spreadsheet marked it "Can be achieved" and this implements it. A CI appearing here needs an RCA and a permanent fix.
+Columns: CI Name | Incident Count. A CI appearing here needs an RCA and a permanent fix.
 
 ---
 
@@ -180,17 +195,46 @@ FROM servicenow-incidents-*
 
 ---
 
-### 3.9 Contact Type Breakdown
+### 3.9 Detection Source (All Incidents)
+
+Measured across **all incidents**, not just P1/P2. Alerting-coverage gaps show up more clearly in the lower-priority long tail.
 
 ```esql
 FROM servicenow-incidents-*
-| WHERE priority IN (1, 2)
 | STATS metric_val = COUNT(*) BY contact_type
 | SORT metric_val DESC
 | LIMIT 10
 ```
 
 If `contact_type = "Monitoring"` is dominant → good (self-detecting). If `contact_type = "Phone"` or `"Email"` dominates → incidents are user-reported, not proactively caught.
+
+---
+
+### 3.11 Business Service Impact (P1+P2)
+
+```esql
+FROM servicenow-incidents-*
+| WHERE priority IN (1, 2) AND business_service.name IS NOT NULL
+| STATS metric_val = COUNT(*) BY svc = business_service.name
+| SORT metric_val DESC
+| LIMIT 15
+```
+
+Ties MIM load to business capability — the conversation to have with service owners.
+
+---
+
+### 3.12 Assignment Group Load
+
+```esql
+FROM servicenow-incidents-*
+| WHERE priority IN (1, 2) AND assignment_group.name IS NOT NULL
+| STATS metric_val = COUNT(*) BY team = assignment_group.name
+| SORT metric_val DESC
+| LIMIT 15
+```
+
+Which teams handle the most major incidents. Concentration in one team = a resourcing conversation.
 
 ---
 
