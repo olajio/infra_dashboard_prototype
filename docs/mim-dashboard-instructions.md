@@ -33,6 +33,7 @@ Before building any panel:
 | Top Affected CIs | ✅ Achieved (new) | "Top Affected CIs" table, row 5 |
 | Business Service Impact | ✅ Achieved (new) | "Business Service Impact (P1+P2)" table, row 5 |
 | Assignment Group Load | ✅ Achieved (new) | "Assignment Group Load" table, row 6 |
+| Long-Open Count (>24h) | ✅ Achieved (new) | "Long-Open P1/P2 (>24h)" metric tile, row 4 |
 | MTTA | ❌ Not achievable | `acknowledged_at` field missing — see Section 4 |
 | TTD (Declare Major) | ❌ Not achievable | `major_declared_at` field missing — see Section 4 |
 | Time to Stabilize | ❌ Not achievable | `stabilized_at` field missing — see Section 4 |
@@ -62,6 +63,8 @@ Already built in the imported dashboard. If you need to rebuild it:
 
 ### 3.2 MTTR — Median Time to Resolve (ES|QL metric)
 
+We compute hours **inside the query** and format as plain number, which sidesteps every Kibana Duration-format ambiguity (precision key name, unit inference, suffix visibility).
+
 1. **Add panel → Lens**
 2. Switch to **ES|QL** mode (top-left toggle)
 3. Paste the query:
@@ -71,12 +74,13 @@ Already built in the imported dashboard. If you need to rebuild it:
        AND priority IN (1, 2)
    | EVAL mins = DATE_DIFF("minutes", opened_at, resolved_at)
    | WHERE mins > 0
-   | STATS metric_val = MEDIAN(mins)
+   | STATS median_mins = MEDIAN(mins)
+   | EVAL metric_val = ROUND(median_mins / 60.0, 1)
    ```
 4. Visualization type: **Metric**
 5. Map `metric_val` to the primary metric dimension
-6. Format: **Duration** → Input format: Minutes → Output: Hours (1 decimal)
-7. Custom label: `MTTR (hours)`
+6. Format: **Number**, pattern `0.0`
+7. Custom label: `MTTR (hrs)`
 
 > **Why MEDIAN not AVG**: a single P1 incident with a 72-hour resolution time inflates the average by ~3×. Median is resistant to outliers and gives a more honest operational picture.
 
@@ -86,16 +90,16 @@ Already built in the imported dashboard. If you need to rebuild it:
 
 ### 3.3 Closure Rate % (ES|QL metric)
 
-`COUNT(field)` in ES|QL counts non-null values, so `COUNT(resolved_at)` is exactly the number of incidents that have been closed.
+`COUNT(field)` in ES|QL counts non-null values, so `COUNT(resolved_at)` is exactly the number of incidents that have been closed. Multiplying by `100.0` (double) before dividing forces double-precision arithmetic.
 
 ```esql
 FROM servicenow-incidents-*
 | WHERE priority IN (1, 2)
 | STATS total = COUNT(*), closed = COUNT(resolved_at)
-| EVAL metric_val = ROUND(TO_DOUBLE(closed) / TO_DOUBLE(total) * 100.0, 1)
+| EVAL metric_val = ROUND(closed * 100.0 / total, 1)
 ```
 
-Format: **Number** with suffix `%`, 1 decimal. Label: `Resolved / Opened`.
+Format: **Number**, pattern `0.0`. Put the `%` sign in the label: `Resolved / Opened (%)`.
 
 ---
 
@@ -157,11 +161,11 @@ Two panels together: a **metric tile** with the actual recurrence rate as a %, a
 FROM servicenow-incidents-*
 | WHERE priority IN (1, 2)
 | STATS n = COUNT(*) BY ci.name
-| STATS repeat = COUNT(CASE(n > 1, 1, null)), total_cis = COUNT(*)
-| EVAL metric_val = ROUND(TO_DOUBLE(repeat) / TO_DOUBLE(total_cis) * 100.0, 1)
+| STATS repeats = COUNT(CASE(n > 1, 1, null)), total_cis = COUNT(*)
+| EVAL metric_val = ROUND(repeats * 100.0 / total_cis, 1)
 ```
 
-Format: **Number** with suffix `%`, 1 decimal. Label: `% of CIs with >1 major incident`.
+Format: **Number**, pattern `0.0`. Label: `% of CIs with >1 major incident`. Alias is `repeats` (not `repeat`) to avoid any collision with the `REPEAT()` ES|QL string function.
 
 **Table — the repeat-offender list:**
 
@@ -221,6 +225,22 @@ FROM servicenow-incidents-*
 ```
 
 Ties MIM load to business capability — the conversation to have with service owners.
+
+---
+
+### 3.13 Long-Open P1/P2 Count (>24h)
+
+Single-value tile showing the count of open P1/P2 incidents already older than 24 hours — the "how many alarms are red" number for the operations lead.
+
+```esql
+FROM servicenow-incidents-*
+| WHERE priority IN (1, 2) AND resolved_at IS NULL
+| EVAL age_hours = DATE_DIFF("hours", opened_at, NOW())
+| WHERE age_hours > 24
+| STATS metric_val = COUNT(*)
+```
+
+Format: **Number**, pattern `0,0`. Label: `Open incidents ageing past 24h`.
 
 ---
 
