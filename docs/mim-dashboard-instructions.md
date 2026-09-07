@@ -1,8 +1,10 @@
-# MIM Dashboard — Consultant Build Instructions
+# MIM Dashboard — Consultant Build Instructions (v2)
 
 Audience: offshore Kibana engineers building the enhanced MIM dashboard.  
 Source index: `servicenow-incidents-*`  
 Kibana version: 8.x (tested at 8.8+)
+
+**v2 update:** incorporates the 15 action items from *MIM Dashboard Updated Action Items.docx*. Dashboard is now 21 panels (was 17). Key changes: 3 tables converted to pie charts (Repeat Offenders, Detection Source, Assignment Group Load), Business Service Impact removed, MTTR Trend now split by P1 vs P2, new Alert vs Auto-Generated pie, new SLA monitoring strip (Breached / At Risk / Within tiles + full detail table). See `docs/offshore-email-v2.md` for the short version.
 
 ---
 
