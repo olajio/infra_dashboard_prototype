@@ -1,0 +1,8 @@
+System Availability - Count
+Servers Not Reporting - Count
+System Uptime - Count of Servers 
+CPU (including All Prod Servers) -  Timeseries Graph 
+System Memory Used - Timeseries Graph
+Disk Utilization - Bar Graph (lists all disks/ mount points)
+Network I/O - Timeseries Graph
+System I/O - Timeseries Graph
